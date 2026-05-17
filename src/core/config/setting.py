@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = Field(default=4096, description="Max tokens for LLM response")
     LLM_TEMPERATURE: float = Field(default=0.3, description="Temperature for LLM")
 
+    # MinIO Settings
+    MINIO_ENDPOINT: str = Field(default="localhost:9000", description="MinIO endpoint")
+    MINIO_ACCESS_KEY: str = Field(default="minioadmin", description="MinIO access key")
+    MINIO_SECRET_KEY: str = Field(default="minioadmin", description="MinIO secret key")
+    MINIO_BUCKET_NAME: str = Field(default="audio-files", description="MinIO bucket name")
+    MINIO_SECURE: bool = Field(default=False, description="Use HTTPS for MinIO")
+
     model_config = ConfigDict(
         env_file=".env",
         case_sensitive=True,
