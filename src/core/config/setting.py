@@ -26,6 +26,18 @@ class Settings(BaseSettings):
     MINIO_BUCKET_NAME: str = Field(default="audio-files", description="MinIO bucket name")
     MINIO_SECURE: bool = Field(default=False, description="Use HTTPS for MinIO")
 
+    # Celery Settings
+    broker_url: str = Field(default="redis://localhost:6379/1")
+    result_backend: str = Field(default="redis://localhost:6379/2")
+    task_serializer: str = Field(default="json")
+    accept_content: List[str] = Field(default=["json"])
+    result_serializer: str = Field(default="json")
+    timezone: str = Field(default="UTC")
+    enable_utc: bool = Field(default=True)
+    task_track_started: bool = Field(default=True)
+    task_time_limit: int = Field(default=3600, ge=60)
+    worker_prefetch_multiplier: int = Field(default=1, ge=1)
+
     model_config = ConfigDict(
         env_file=".env",
         case_sensitive=True,
