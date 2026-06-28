@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field, ConfigDict
+from typing import List
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -12,6 +14,13 @@ class Settings(BaseSettings):
     # Logging
     LOG_FORMAT: str = Field(default="console", description="Log format: console or json")
     LOG_LEVEL: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL")
+
+    # Database Settings
+    DATABASE_URL: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/sumify",
+        description="Async SQLAlchemy database URL (driver asyncpg)",
+    )
+    DB_ECHO: bool = Field(default=False, description="Echo SQL statements (debug only)")
 
     # LLM Settings
     LLM_BASE_URL: str = Field(default="https://api.blablalba.com", description="Base URL for LLM")
@@ -38,10 +47,12 @@ class Settings(BaseSettings):
     task_time_limit: int = Field(default=3600, ge=60)
     worker_prefetch_multiplier: int = Field(default=1, ge=1)
 
-    model_config = ConfigDict(
+    # NB: untuk BaseSettings, env_file HARUS lewat SettingsConfigDict (bukan ConfigDict),
+    # kalau tidak file .env tidak akan terbaca.
+    model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
 
     @property

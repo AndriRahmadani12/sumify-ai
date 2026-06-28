@@ -11,3 +11,9 @@ miniopy-async==1.21.1
 python-multipart==0.0.9
 structlog==24.4.0
 weasyprint
+
+# --- Database (CRUD/ORM) ---
+sqlalchemy[asyncio]>=2.0
+greenlet
+alembic
+# aiosqlite  # hanya untuk testing lokal tanpa Postgres
