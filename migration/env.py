@@ -20,7 +20,7 @@ config.set_main_option(
     "sqlalchemy.url",
     os.getenv(
         "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/sumify",
+        "postgresql+asyncpg://postgres:postgres@localhost:5434/sumify",
     ),
 )
 
