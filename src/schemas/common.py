@@ -55,7 +55,7 @@ class PaginationParams(BaseModel):
             return min(allowed_sizes, key=lambda x: abs(x - v))
         return v
 
-class PaginatedResponse(BaseModel), Generic[T]:
+class PaginatedResponse(BaseModel, Generic[T]):
     items: list[T] = Field(default_factory=list, description="List of items")
     total: int = Field(default=0, ge=0, description="Total number of items")
     page: int = Field(default=1, ge=1, description="Page number")
