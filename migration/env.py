@@ -1,21 +1,26 @@
-"""Alembic environment. Membaca DATABASE_URL dari environment dan metadata dari models."""
+"""Alembic environment (async). Membaca DATABASE_URL dari environment,
+metadata dari model ORM aktif di src/models.
+"""
+import asyncio
 import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from app.database import Base
-from app import models  # noqa: F401  (penting: agar semua tabel terdaftar di metadata)
+# Metadata sumber tunggal: Base + semua model aktif
+from src.core.database.postgree import Base
+from src import models  # noqa: F401  (registrasi semua tabel ke metadata)
 
 config = context.config
 
-# Override URL dari env var supaya tidak menyimpan kredensial di file.
+# Ambil URL dari environment (sama seperti aplikasi)
 config.set_main_option(
     "sqlalchemy.url",
     os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg://postgres:postgres@localhost:5432/meeting_summarizer",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/sumify",
     ),
 )
 
@@ -37,16 +42,25 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    connectable = engine_from_config(
+def do_run_migrations(connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-        with context.begin_transaction():
-            context.run_migrations()
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+
+def run_migrations_online() -> None:
+    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():
