@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = Field(default=4096, description="Max tokens for LLM response")
     LLM_TEMPERATURE: float = Field(default=0.3, description="Temperature for LLM")
 
+    # Whisper Settings
+    WHISPER_MODEL_SIZE: str = Field(default="base", description="Whisper model size: tiny, base, small, medium, large")
+    WHISPER_DEVICE: str | None = Field(default=None, description="Whisper device: cpu, cuda, None for auto")
+
     # MinIO Settings
     MINIO_ENDPOINT: str = Field(default="localhost:9000", description="MinIO endpoint")
     MINIO_ACCESS_KEY: str = Field(default="minioadmin", description="MinIO access key")
