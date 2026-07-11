@@ -1,6 +1,22 @@
-# Meeting Summarizer
+# Sumify AI: Meeting Summarizer
+
+<p align="center">
+  <img src="docs\logo\sumifyai_logo_horizontal.png" alt="Sumify AI" width="420" />
+</p>
 
 Aplikasi untuk meringkas hasil rapat dari file audio menggunakan AI. Aplikasi ini mengubah audio menjadi teks (transkripsi), lalu menghasilkan ringkasan dan dokumen PDF.
+
+## Repository Terkait
+Project ini merupakan repository untuk aplikasi Android atau tampilan user Sumify AI.
+
+[![Mobile App Repository](https://img.shields.io/badge/Mobile%20App%20Repository-sumify--ai-181717?style=for-the-badge&logo=github)]([https://github.com/AndriRahmadani12/sumify-ai](https://github.com/mkaspulanwar/sumify-ai-fe))
+
+## Tim
+| Nama | GitHub |
+| --- | --- |
+| M. Kaspul Anwar | [![GitHub](https://img.shields.io/badge/mkaspulanwar-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mkaspulanwar) |
+| Andri Rahmadani | [![GitHub](https://img.shields.io/badge/AndriRahmadani12-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AndriRahmadani12) |
+| Henny Kartika | [![GitHub](https://img.shields.io/badge/hennykartika-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hennykartika) |
 
 ## Teknologi Utama
 
