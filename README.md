@@ -9,7 +9,7 @@ Aplikasi untuk meringkas hasil rapat dari file audio menggunakan AI. Aplikasi in
 ## Repository Terkait
 Project ini merupakan repository untuk aplikasi Android atau tampilan user Sumify AI.
 
-[![Mobile App Repository](https://img.shields.io/badge/Mobile%20App%20Repository-sumify--ai-181717?style=for-the-badge&logo=github)]([https://github.com/AndriRahmadani12/sumify-ai](https://github.com/mkaspulanwar/sumify-ai-fe)
+[![Mobile App Repository](https://img.shields.io/badge/Mobile%20App%20Repository-sumify--ai-181717?style=for-the-badge&logo=github)](https://github.com/mkaspulanwar/sumify-ai-fe)
 
 ## Tim
 | Nama | GitHub |
