@@ -10,7 +10,7 @@ openai
 miniopy-async==1.21.1
 python-multipart==0.0.9
 structlog==24.4.0
-weasyprint
+playwright
 
 # --- Database (CRUD/ORM) ---
 sqlalchemy[asyncio]>=2.0
