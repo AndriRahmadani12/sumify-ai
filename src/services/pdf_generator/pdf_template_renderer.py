@@ -1,23 +1,13 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass
 from html import escape
 from pathlib import Path
 from typing import Any
 
-from src.core.exceptions import ValidationException
 
-
-@dataclass(frozen=True)
-class PDFTemplate:
-    id: str
-    name: str
-    directory: str
-
-
-class PDFTemplateHandler:
-    """Selects PDF templates and renders their HTML content."""
+class PDFTemplateRenderer:
+    """Renders database-backed PDF template HTML with summary context."""
 
     _pic_table_keys = {"pic_table_rows", "pic_tasks", "pic_table", "pic_items"}
     _business_pic_table_keys = {
@@ -51,69 +41,16 @@ class PDFTemplateHandler:
     )
     _logo_filename = "sumifyai_logo_horizontal.png"
 
-    _templates: dict[str, PDFTemplate] = {
-        "simple": PDFTemplate(
-            id="simple",
-            name="Simple Summary",
-            directory="simple_summary",
-        ),
-        "business": PDFTemplate(
-            id="business",
-            name="Business Summary",
-            directory="business_summary",
-        ),
-    }
-    _aliases: dict[str, str] = {
-        "simple_summary": "simple",
-        "business_summary": "business",
-    }
-
-    def __init__(self, templates_dir: Path | None = None) -> None:
-        self.templates_dir = templates_dir or Path(__file__).resolve().parent
+    def __init__(self) -> None:
         self._logo_data_uri: str | None = None
 
-    def list_templates(self) -> list[dict[str, str]]:
-        return [
-            {"id": template.id, "name": template.name}
-            for template in self._templates.values()
-        ]
-
-    def render(self, template_type: str, context: dict[str, Any]) -> str:
-        template = self._get_template(template_type)
-        template_html = self._read_template_file(template)
+    def render(self, html_content: str, context: dict[str, Any]) -> str:
         rendered_context = self._normalize_context(context)
 
         for key, value in rendered_context.items():
-            template_html = template_html.replace(f"{{{{{key}}}}}", value)
+            html_content = html_content.replace(f"{{{{{key}}}}}", value)
 
-        return self._clear_unresolved_placeholders(template_html)
-
-    def _get_template(self, template_type: str) -> PDFTemplate:
-        normalized_type = template_type.strip().lower()
-        normalized_type = self._aliases.get(normalized_type, normalized_type)
-        template = self._templates.get(normalized_type)
-
-        if template is None:
-            raise ValidationException(
-                message="Unsupported PDF template type",
-                details={
-                    "template_type": template_type,
-                    "available_templates": list(self._templates.keys()),
-                },
-            )
-
-        return template
-
-    def _read_template_file(self, template: PDFTemplate) -> str:
-        template_path = self.templates_dir / template.directory / "template.html"
-
-        if not template_path.exists():
-            raise ValidationException(
-                message="PDF template file not found",
-                details={"template": template.id, "path": str(template_path)},
-            )
-
-        return template_path.read_text(encoding="utf-8")
+        return self._clear_unresolved_placeholders(html_content)
 
     def _normalize_context(self, context: dict[str, Any]) -> dict[str, str]:
         rendered_context = {

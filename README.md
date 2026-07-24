@@ -78,11 +78,7 @@ meet-summarizer/
     │
     ├── services/            # Business logic utama
     │   ├── model_loader/    # Load AI/ML models (Whisper, dll)
-    │   ├── pdf_generator/   # Generate dokumen PDF
-    │   ├── pdf_templates/   # Template PDF
-    │   │   ├── template_a/  # Template A (struktur ringkasan tipe A)
-    │   │   ├── template_b/  # Template B (struktur ringkasan tipe B)
-    │   │   └── template_c/  # Template C (struktur ringkasan tipe C)
+    │   ├── pdf_generator/   # Render template DB dan generate dokumen PDF
     │   ├── pipeline/        # Orchestrasi alur kerja (transcribe → summarize → PDF)
     │   ├── summary_generator/  # Generate ringkasan menggunakan LLM
     │   └── transcriber/     # Speech-to-text (Whisper integration)
@@ -135,7 +131,8 @@ File migrasi database Alembic untuk versioning schema database.
 2. **Queue Task** → Celery worker (`worker/`) memproses secara async
 3. **Transcribe** → `transcriber/` mengubah audio jadi teks dengan Whisper
 4. **Summarize** → `summary_generator/` kirim teks ke LLM untuk diringkas
-5. **Generate PDF** → `pdf_generator/` dengan template yang dipilih
+5. **Generate PDF** → `pdf_generator/` mengambil `html_content` berdasarkan
+   `template_id` dari tabel `pdf_templates`, lalu merender dan membuat PDF
 6. **Store Result** → PDF disimpan ke `storage/` dan metadata ke `models/`
 
 ## Cara Menjalankan

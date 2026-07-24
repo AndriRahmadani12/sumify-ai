@@ -11,18 +11,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Metadata sumber tunggal: Base + semua model aktif
 from src.core.database.postgree import Base
+from src.core.config.setting import settings
 from src import models  # noqa: F401  (registrasi semua tabel ke metadata)
 
 config = context.config
 
 # Ambil URL dari environment (sama seperti aplikasi)
-config.set_main_option(
-    "sqlalchemy.url",
-    os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/sumify",
-    ),
-)
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", settings.DATABASE_URL))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
