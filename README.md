@@ -1,6 +1,22 @@
-# Meeting Summarizer
+# Sumify AI: Meeting Summarizer
+
+<p align="center">
+  <img src="docs\logo\sumifyai_logo_horizontal.png" alt="Sumify AI" width="420" />
+</p>
 
 Aplikasi untuk meringkas hasil rapat dari file audio menggunakan AI. Aplikasi ini mengubah audio menjadi teks (transkripsi), lalu menghasilkan ringkasan dan dokumen PDF.
+
+## Repository Terkait
+Project ini merupakan repository untuk aplikasi Android atau tampilan user Sumify AI.
+
+[![Mobile App Repository](https://img.shields.io/badge/Mobile%20App%20Repository-sumify--ai-181717?style=for-the-badge&logo=github)](https://github.com/mkaspulanwar/sumify-ai-fe)
+
+## Tim
+| Nama | GitHub |
+| --- | --- |
+| M. Kaspul Anwar | [![GitHub](https://img.shields.io/badge/mkaspulanwar-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mkaspulanwar) |
+| Andri Rahmadani | [![GitHub](https://img.shields.io/badge/AndriRahmadani12-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/AndriRahmadani12) |
+| Henny Kartika | [![GitHub](https://img.shields.io/badge/hennykartika-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hennykartika) |
 
 ## Teknologi Utama
 
@@ -62,11 +78,7 @@ meet-summarizer/
     │
     ├── services/            # Business logic utama
     │   ├── model_loader/    # Load AI/ML models (Whisper, dll)
-    │   ├── pdf_generator/   # Generate dokumen PDF
-    │   ├── pdf_templates/   # Template PDF
-    │   │   ├── template_a/  # Template A (struktur ringkasan tipe A)
-    │   │   ├── template_b/  # Template B (struktur ringkasan tipe B)
-    │   │   └── template_c/  # Template C (struktur ringkasan tipe C)
+    │   ├── pdf_generator/   # Render template DB dan generate dokumen PDF
     │   ├── pipeline/        # Orchestrasi alur kerja (transcribe → summarize → PDF)
     │   ├── summary_generator/  # Generate ringkasan menggunakan LLM
     │   └── transcriber/     # Speech-to-text (Whisper integration)
@@ -119,7 +131,8 @@ File migrasi database Alembic untuk versioning schema database.
 2. **Queue Task** → Celery worker (`worker/`) memproses secara async
 3. **Transcribe** → `transcriber/` mengubah audio jadi teks dengan Whisper
 4. **Summarize** → `summary_generator/` kirim teks ke LLM untuk diringkas
-5. **Generate PDF** → `pdf_generator/` dengan template yang dipilih
+5. **Generate PDF** → `pdf_generator/` mengambil `html_content` berdasarkan
+   `template_id` dari tabel `pdf_templates`, lalu merender dan membuat PDF
 6. **Store Result** → PDF disimpan ke `storage/` dan metadata ke `models/`
 
 ## Cara Menjalankan

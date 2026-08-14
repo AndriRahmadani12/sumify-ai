@@ -1,37 +1,69 @@
 from __future__ import annotations
 
+import asyncio
+import base64
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from src.core.exceptions import ProcessingException
-from src.services.pdf_templates.pdf_template_handler import PDFTemplateHandler
+from src.core.exceptions import (
+    NotFoundException,
+    ProcessingException,
+    ValidationException,
+)
+from src.repositories.pdf_template import PDFTemplateRepository
+from src.services.pdf_generator.pdf_template_renderer import PDFTemplateRenderer
 
 
 class PDFGeneratorService:
     """Generates summary PDFs from rendered HTML templates."""
 
+    _logo_filename = "sumifyai_logo_horizontal.png"
+
     def __init__(
         self,
-        template_handler: PDFTemplateHandler | None = None,
+        template_repository: PDFTemplateRepository,
+        template_renderer: PDFTemplateRenderer | None = None,
         output_dir: Path | str = "generated_pdfs",
     ) -> None:
-        self.template_handler = template_handler or PDFTemplateHandler()
+        self.template_repository = template_repository
+        self.template_renderer = template_renderer or PDFTemplateRenderer()
         self.output_dir = Path(output_dir)
 
-    def render_html(self, template_type: str, context: dict[str, Any]) -> str:
-        return self.template_handler.render(template_type, context)
+    async def render_html(self, template_id: int, context: dict[str, Any]) -> str:
+        template = await self.template_repository.get_by_id(template_id)
 
-    def generate_pdf(
+        if template is None:
+            raise NotFoundException("PDF template", template_id)
+
+        if not template.is_active:
+            raise ValidationException(
+                message="PDF template is inactive",
+                details={"template_id": template_id},
+            )
+
+        if not template.html_content or not template.html_content.strip():
+            raise ValidationException(
+                message="PDF template has no HTML content",
+                details={"template_id": template_id},
+            )
+
+        return self.template_renderer.render(template.html_content, context)
+
+    async def generate_pdf(
         self,
-        template_type: str,
+        template_id: int,
         context: dict[str, Any],
         output_filename: str | None = None,
     ) -> Path:
-        html = self.render_html(template_type, context)
-        return self.generate_pdf_from_html(html, output_filename)
+        html = await self.render_html(template_id, context)
+        return await asyncio.to_thread(
+            self._generate_pdf_from_html,
+            html,
+            output_filename,
+        )
 
-    def generate_pdf_from_html(
+    def _generate_pdf_from_html(
         self,
         html: str,
         output_filename: str | None = None,
@@ -40,13 +72,38 @@ class PDFGeneratorService:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            from weasyprint import HTML
+            from playwright.sync_api import sync_playwright
         except ImportError as exc:
             raise ProcessingException(
-                "PDF generation requires the 'weasyprint' package to be installed."
+                "PDF generation requires the 'playwright' package to be installed."
             ) from exc
 
-        HTML(string=html).write_pdf(str(output_path))
+        try:
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.launch()
+                page = browser.new_page()
+                page.set_content(html, wait_until="networkidle")
+                page.pdf(
+                    path=str(output_path),
+                    format="A4",
+                    print_background=True,
+                    display_header_footer=True,
+                    header_template=self._build_header_template(),
+                    footer_template=self._build_footer_template(),
+                    margin={
+                        "top": "22mm",
+                        "right": "18mm",
+                        "bottom": "18mm",
+                        "left": "18mm",
+                    },
+                )
+                browser.close()
+        except Exception as exc:
+            raise ProcessingException(
+                "PDF generation failed. Make sure Playwright Chromium is installed "
+                "with 'python -m playwright install chromium'."
+            ) from exc
+
         return output_path
 
     def _build_output_path(self, output_filename: str | None) -> Path:
@@ -60,3 +117,52 @@ class PDFGeneratorService:
             filename = f"{filename}.pdf"
 
         return self.output_dir / filename
+
+    def _build_header_template(self) -> str:
+        logo_src = self._get_logo_data_uri()
+        logo_html = (
+            f"<img src=\"{logo_src}\" style=\"height:36px; width:auto; display:block;\" />"
+            if logo_src
+            else "<span></span>"
+        )
+
+        return (
+            "<div style=\"width:100%; font-family:Arial, Helvetica, sans-serif; "
+            "font-size:9px; color:#111827; padding:4.5mm 18mm 0; "
+            "display:flex; align-items:center; justify-content:space-between;\">"
+            f"{logo_html}"
+            "<div style=\"display:flex; align-items:center; gap:8px; white-space:nowrap;\">"
+            "<span style=\"font-weight:600;\">Generated By Sumify AI</span>"
+            "<span style=\"display:inline-block; width:1px; height:12px; background:#d1d5db;\"></span>"
+            "<span style=\"min-width:18px; padding:2px 6px; border:1px solid #634bf9; "
+            "border-radius:999px; background:#ffffff; color:#111827; text-align:center; "
+            "font-size:8px; line-height:1;\">"
+            "<span class=\"pageNumber\"></span>"
+            "</span>"
+            "</div>"
+            "</div>"
+        )
+
+    def _build_footer_template(self) -> str:
+        return (
+            "<div style=\"width:100%; font-family:Arial, Helvetica, sans-serif; "
+            "font-size:8px; color:#374151; padding:0 18mm 5mm; "
+            "text-align:center;\">"
+            "AI-generated summaries may contain inaccuracies; please verify important details "
+            "against the original audio"
+            "</div>"
+        )
+
+    def _get_logo_data_uri(self) -> str:
+        logo_path = (
+            Path(__file__).resolve().parents[3]
+            / "docs"
+            / "logo"
+            / self._logo_filename
+        )
+
+        if not logo_path.exists():
+            return ""
+
+        encoded_logo = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+        return f"data:image/png;base64,{encoded_logo}"
