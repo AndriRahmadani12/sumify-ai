@@ -5,3 +5,6 @@ __pycache__/
 *.so
 .Python
 venv/
+*.db
+generated_pdfs/dummy-*.pdf
+generated_pdfs/meeting-*.pdf

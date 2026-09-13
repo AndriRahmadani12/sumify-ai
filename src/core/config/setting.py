@@ -23,10 +23,16 @@ class Settings(BaseSettings):
     DB_ECHO: bool = Field(default=False, description="Echo SQL statements (debug only)")
 
     # LLM Settings
-    LLM_BASE_URL: str = Field(default="https://api.blablalba.com", description="Base URL for LLM")
-    LLM_API_KEY: str = Field(default="blablalba", description="API Key for LLM")
+    LLM_BASE_URL: str = Field(default="https://api.deepseek.com/v1", description="Base URL for LLM")
+    LLM_API_KEY: str = Field(default="", description="API Key for LLM")
+    LLM_MODEL: str = Field(default="deepseek-chat", description="Nama model LLM")
     LLM_MAX_TOKENS: int = Field(default=4096, description="Max tokens for LLM response")
     LLM_TEMPERATURE: float = Field(default=0.3, description="Temperature for LLM")
+
+    # Whisper (transkripsi lokal)
+    WHISPER_MODEL: str = Field(default="base", description="Ukuran model: tiny, base, small, medium, large-v3")
+    WHISPER_DEVICE: str = Field(default="cpu", description="cpu atau cuda")
+    WHISPER_COMPUTE_TYPE: str = Field(default="int8", description="int8 hemat memori di CPU")
 
     # MinIO Settings
     MINIO_ENDPOINT: str = Field(default="localhost:9000", description="MinIO endpoint")

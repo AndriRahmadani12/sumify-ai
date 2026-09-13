@@ -1,6 +1,7 @@
 """Storage service abstraction."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 from uuid import uuid4
 
 from src.core.storage.minio import MinioService
@@ -169,14 +170,14 @@ class StorageService:
 
         Args:
             storage_path: Path in storage.
-            expiry: URL expiry in seconds.
 
         Returns:
             Presigned URL.
         """
+        # miniopy-async minta timedelta, bukan detik dalam bentuk integer.
         return await self.storage.get_file_url(
             object_name=storage_path,
-            expires=expiry,
+            expires=timedelta(seconds=expiry),
         )
 
     async def download_file(
@@ -191,7 +192,21 @@ class StorageService:
         Returns:
             File bytes.
         """
-        return await self.storage.download_file(storage_path)
+        # miniopy-async 1.21.x menuntut aiohttp.ClientSession pada get_object,
+        # sedangkan versi yang lebih baru tidak. Ditangani keduanya di sini.
+        import aiohttp
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                response = await self.storage.client.get_object(
+                    bucket_name=self.storage.bucket_name,
+                    object_name=storage_path,
+                    session=session,
+                )
+                return await response.read()
+        except TypeError:
+            # Versi baru: get_object tidak menerima parameter session.
+            return await self.storage.download_file(storage_path)
 
     async def delete_file(
         self,

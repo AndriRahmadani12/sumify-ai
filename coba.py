@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
-from src.core.database.postgree import async_session_maker
-from src.repositories.pdf_template import PDFTemplateRepository
 from src.services.pdf_generator.pdf_generator_service import PDFGeneratorService
 
 
@@ -129,35 +126,23 @@ def build_context() -> dict:
     }
 
 
-async def main() -> None:
+def main() -> None:
     output_dir = Path("generated_pdfs")
     output_dir.mkdir(exist_ok=True)
 
+    service = PDFGeneratorService(output_dir=output_dir)
     context = build_context()
 
-    async with async_session_maker() as session:
-        repository = PDFTemplateRepository(session)
-        service = PDFGeneratorService(repository, output_dir=output_dir)
+    for template in ("business", "simple"):
+        pdf_name = f"coba-{template}.pdf"
 
-        for template_name in ("Business Summary", "Simple Summary"):
-            template = await repository.get_by_name(template_name)
-            if template is None:
-                print(f"Template tidak ditemukan di database: {template_name}")
-                continue
-
-            pdf_name = f"coba-{template.id}.pdf"
-
-            try:
-                pdf_path = await service.generate_pdf(
-                    template.id,
-                    context,
-                    pdf_name,
-                )
-            except Exception as exc:
-                print(f"PDF gagal dibuat untuk template_id={template.id}: {exc}")
-            else:
-                print(f"PDF dibuat: {pdf_path}")
+        try:
+            pdf_path = service.generate_pdf(template, context, pdf_name)
+        except Exception as exc:
+            print(f"PDF gagal dibuat untuk {template}: {exc}")
+        else:
+            print(f"PDF dibuat: {pdf_path}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

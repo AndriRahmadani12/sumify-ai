@@ -1,18 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import base64
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from src.core.exceptions import (
-    NotFoundException,
-    ProcessingException,
-    ValidationException,
-)
-from src.repositories.pdf_template import PDFTemplateRepository
-from src.services.pdf_generator.pdf_template_renderer import PDFTemplateRenderer
+from src.core.exceptions import ProcessingException
+from src.services.pdf_templates.pdf_template_handler import PDFTemplateHandler
 
 
 class PDFGeneratorService:
@@ -22,48 +16,25 @@ class PDFGeneratorService:
 
     def __init__(
         self,
-        template_repository: PDFTemplateRepository,
-        template_renderer: PDFTemplateRenderer | None = None,
+        template_handler: PDFTemplateHandler | None = None,
         output_dir: Path | str = "generated_pdfs",
     ) -> None:
-        self.template_repository = template_repository
-        self.template_renderer = template_renderer or PDFTemplateRenderer()
+        self.template_handler = template_handler or PDFTemplateHandler()
         self.output_dir = Path(output_dir)
 
-    async def render_html(self, template_id: int, context: dict[str, Any]) -> str:
-        template = await self.template_repository.get_by_id(template_id)
+    def render_html(self, template_type: str, context: dict[str, Any]) -> str:
+        return self.template_handler.render(template_type, context)
 
-        if template is None:
-            raise NotFoundException("PDF template", template_id)
-
-        if not template.is_active:
-            raise ValidationException(
-                message="PDF template is inactive",
-                details={"template_id": template_id},
-            )
-
-        if not template.html_content or not template.html_content.strip():
-            raise ValidationException(
-                message="PDF template has no HTML content",
-                details={"template_id": template_id},
-            )
-
-        return self.template_renderer.render(template.html_content, context)
-
-    async def generate_pdf(
+    def generate_pdf(
         self,
-        template_id: int,
+        template_type: str,
         context: dict[str, Any],
         output_filename: str | None = None,
     ) -> Path:
-        html = await self.render_html(template_id, context)
-        return await asyncio.to_thread(
-            self._generate_pdf_from_html,
-            html,
-            output_filename,
-        )
+        html = self.render_html(template_type, context)
+        return self.generate_pdf_from_html(html, output_filename)
 
-    def _generate_pdf_from_html(
+    def generate_pdf_from_html(
         self,
         html: str,
         output_filename: str | None = None,
